@@ -1,0 +1,16 @@
+<html>
+  <title>
+    Login Page
+  </title>
+<head>
+  {{> header}}
+</head>
+<body>
+    <b>{{reason}}</b>
+    <form action = "/login" method = "POST">
+      <input type = "username" name = "username" placeholder = "Username">
+      <input type = "password" name = "password" placeholder = "Password">
+      <input type = "submit" value = "Login">
+    </form>
+</body>
+</html>

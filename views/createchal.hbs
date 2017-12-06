@@ -1,0 +1,18 @@
+<html>
+<title>
+Create a challenge
+</title>
+<header>
+  {{> header2}}
+</header>
+<body>
+  <form action = "/createchal" method = "post" id = "form1" enctype = "multipart/form-data"  ><br>
+    name :&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type = "name" name = "challenge_name" placeholder = "Challenge Name"><br>
+    description : <textarea rows = "6" cols = "50" name = "description" form = "form1" ></textarea> <br>
+    points :&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type = "number" name = "points" ><br>
+    testcases file :&nbsp;&nbsp;&nbsp; <input type = "file" name = "testcases"><br>
+    <input type = "submit" name = "validate" >
+  </form>
+<body>
+  {{message}}
+</html>

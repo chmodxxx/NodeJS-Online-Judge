@@ -1,0 +1,18 @@
+<html>
+  <title>
+    Registration Page
+  </title>
+<head>
+  {{> header}}
+</head>
+<body>
+    <b> {{reason}} </b>
+    <form action = "/register" method = "POST">
+      <input type = "username" name = "username" placeholder = "Username"><br>
+      <input type = "email" name = "email" placeholder = "Email"><br>
+      <input type = "password" name = "password" placeholder = "Password"><br>
+      <input type = "password" name = "passwordConfirmation" placeholder = "Retype Password"></br>
+      <input type = "submit" value = "Register">
+    </form>
+</body>
+</html>
