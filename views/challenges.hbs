@@ -1,0 +1,42 @@
+
+<html>
+<title>
+  Challenges page
+</title>
+<head>
+  {{#if logged}}
+  {{> header2}}
+  {{else}}
+  {{> header}}
+  {{/if}}
+</head>
+<body>
+<table border = "1">
+<tr>
+  <td>
+    Challenge name
+  </td>
+  <td>
+    Challenge Points
+  </td>
+  <td>
+    Challenge Page
+  </td>
+</tr>
+
+{{#chall}}
+<tr>
+  <td>
+    {{chall_name}}
+  </td>
+  <td>
+    {{chall_points}}
+  </td>
+  <td>
+    <a href='{{chall_page}}'>Link</a>
+  </td>
+</tr>
+{{/chall}}
+</table>
+</body>
+</html>

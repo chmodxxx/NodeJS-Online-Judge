@@ -215,15 +215,37 @@ app.post('/createchal', (req, res) => {
 })
 
 app.get('/challenges', (req, res) => {
-  sql.select(dbInfos, "*", "chals","where approved = 1 ", (err, row) => {
-  if (row !== undefined) {
-    chals = row;
-    console.log(row);
+  sess = req.session;
+  var logged = sess.logged;
+  var chals ;
+  sql.select(dbInfos, "*", "chals","where approved=1 ", (err, rows) => {
+  if (rows !== undefined) {
+    chals = rows[0];
+    delete chals.test_cases;
+    delete chals.approved;
+    chals.chall_page = `/chall_page?challID=${chals.chall_id}`;
+    delete chals.chall_id;
+    console.log(chals);
+    res.render('challenges.hbs' , {
+      chall : chals,
+      logged : logged
+    })
+  }
+  else {
+    res.send('<b>No challenges are uploaded yet</b> Go back to <a href = "/">home</a>')
   }
 
 
 })
 });
+
+app.get('/chall_page', (req, res) => {
+  sess = req.session;
+  var id = req.query.challID;
+  console.log(id)
+});
+
+// app.post
 
 app.listen(8081, () => {
   console.log('[+] Listening on port 8081 ! ')
