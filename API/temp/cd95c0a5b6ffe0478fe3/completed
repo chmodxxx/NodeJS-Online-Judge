@@ -1,0 +1,4 @@
+error: error while loading CharSequence, class file '/usr/lib/jvm/java-8-oracle/jre/lib/rt.jar(java/lang/CharSequence.class)' is broken
+(bad constant pool tag 18 at byte 10)
+one error found
+*-COMPILEBOX::ENDOFOUTPUT-* 29.16

@@ -1,0 +1,9 @@
+ * Starting MySQL database server mysqld
+   ...done.
+ * Checking for tables which need an upgrade, are corrupt or were 
+not closed cleanly.
+----BEGIN-----
+name
+Hello
+----END----
+*-COMPILEBOX::ENDOFOUTPUT-* 30.63
