@@ -16,14 +16,15 @@ const dbInfos = db.connInfos;
 const uuidv4 = require('uuid/v4');
 const challdir = "/home/chmod/Desktop/node_app/challenges";
 
-function updatesubmission(verdict, challid, userid, dbinfos, time){
+function updatesubmission(verdict, challid, userid, dbinfos, time, lang){
   let submission = {
     submission_challid : challid,
     submission_userid : userid,
     verdict : verdict,
-    submission_time : time
+    submission_time : time,
+    lang : lang
   };
-  console.log(submission);
+
   sql.insert(dbInfos, "submission", submission , (err, ok) => {
     if(ok) {
       return 1;
@@ -175,6 +176,7 @@ app.post('/createchal', (req, res) => {
     var chalname;
     var description;
     var points;
+    var tle;
     //handling file upload
     var form = new formidable.IncomingForm();
     form.multiples = true;
@@ -190,6 +192,9 @@ app.post('/createchal', (req, res) => {
       }
       if (name === "points") {
         points = field;
+      }
+      if (name == "timelimit") {
+        tle = field;
       }
       });
 
@@ -217,7 +222,7 @@ app.post('/createchal', (req, res) => {
         approved : '0',
         chall_stdin : newName1,
         chall_stdout : newName2,
-        chall_timelimit : timelimit
+        chall_timelimit : tle
       }
       sql.insert(dbInfos, "chals", chal , (err, ok) => {
         if(err) {
@@ -236,6 +241,7 @@ app.post('/createchal', (req, res) => {
 
   }
   else {
+    sess.origin = 'create_chal';
     res.redirect('/login');
   }
 })
@@ -297,6 +303,7 @@ app.get('/chall_page/:challID', (req, res) => {
 
 app.post('/chall_page', (req, res) => {
   sess = req.session;
+  let logged = sess.logged;
   var chall = sess.chall;
   var lang;
   var code;
@@ -343,13 +350,15 @@ app.post('/chall_page', (req, res) => {
               if (time > chall.chall_timelimit ) {
                 verdict = "Time Limit Exceeded";
                 res.render('chall_page.hbs', {
-                  verdict : 'Time limit exceeded'
+                  verdict : 'Time limit exceeded',
+                  logged : logged
                 });
               }
               else if(err !== '') {
                 verdict = "Compilation Error";
                 res.render('chall_page.hbs' , {
-                  verdict : 'Compilation Error'
+                  verdict : 'Compilation Error',
+                  logged : logged
                 });
               }
 
@@ -361,21 +370,23 @@ app.post('/chall_page', (req, res) => {
                   else {
                     if(output === data) {
                       verdict = "Accepted";
-                      res.render('chall_page', {
-                        verdict : 'Accepted'
+                      res.render('chall_page.hbs', {
+                        verdict : 'Accepted',
+                        logged : logged
                       });
                     }
                     else {
                       verdict = "Wrong Answer";
-                      res.render('chall_page', {
-                        verdict : 'Wrong Answer'
+                      res.render('chall_page.hbs', {
+                        verdict : 'Wrong Answer',
+                        logged : logged
                       });
                     }
                     update = true;
                   }
-              if(update) updatesubmission(verdict, chall.chall_id, sess.userInfo.id, dbInfos, submissionTime)});
+              if(update) updatesubmission(verdict, chall.chall_id, sess.userInfo.id, dbInfos, submissionTime, lang)});
             }
-            if (!update) updatesubmission(verdict, chall.chall_id, sess.userInfo.id, dbInfos, submissionTime);
+            if (!update) updatesubmission(verdict, chall.chall_id, sess.userInfo.id, dbInfos, submissionTime, lang);
         });
 
   });
@@ -383,24 +394,35 @@ app.post('/chall_page', (req, res) => {
 }
 
   else {
+    sess.origin = 'chall_page';
+    sess.origin.challid = chall.chall_id;
     res.redirect('/login');
   }
 })
 
 app.get('/submissions', (req, res) => {
   sess = req.session;
-
-  sql.select(dbInfos, '*', 'submission' , `where submission_userid=${sess.userInfo.id}` , (err, row) => {
+  if(sess.logged){
+  sql.select(dbInfos, 'submission.lang, submission.verdict, submission.submission_time, chal.chall_name, chal.chall_id', 'submission submission' , `left join chals chal on chal.chall_id=submission.submission_challid where submission_userid=${sess.userInfo.id} ` , (err, row) => {
     if (row !== undefined) {
       let submissions = row;
       console.log(submissions);
       res.render('submissions.hbs', {
         submission : submissions
       });
-  }
+    }
+
   else {
-    console.log('nok');
-  }});
+    res.render('submissions.hbs', {
+      msg : "You have no submissions"
+    });
+  }
+});
+}
+  else {
+    sess.origin = 'submissions';
+    res.redirect('/login')
+  }
 });
 app.listen(8082, () => {
   console.log('[+] Listening on port 8082 ! ')

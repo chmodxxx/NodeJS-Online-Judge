@@ -1,4 +1,10 @@
-
+<html>
+<title>
+  Submissions history
+</title>
+<head>
+  {{> header2}}
+</head>
 <table border = "1" >
   <tr>
     <td>
@@ -6,6 +12,9 @@
     </td>
     <td>
       Challenge
+    </td>
+    <td>
+      Language
     </td>
     <td>
       Verdict
@@ -20,8 +29,12 @@
       {{chall_name}}
     </td>
     <td>
+      {{lang}}
+    </td>
+    <td>
       {{verdict}}
     </td>
   </tr>
   {{/submission}}
 </table>
+</html>
