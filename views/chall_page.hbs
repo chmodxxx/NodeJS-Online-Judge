@@ -9,6 +9,37 @@
   {{> header}}
   {{/if}}
 </head>
+<style>
+.output{
+	font-family: monospace;
+	white-space: pre-line;
+	border:1px solid #ccc;
+	background: #eee;
+	min-height: 50px;
+}
+</style>
 <body>
-</body>
+  {{#chall}}
+  Challenge name : {{chall_name}}<br>
+  Challenge points : {{chall_points}}<br>
+  Challenge description : {{chall_description}}<br>
+  Challenge Time limit : {{chall_timelimit}}<br>
+  <br>
+  {{/chall}}
+  <form method = "POST" action = "/chall_page" id = "form1" >
+    <b>You can either upload source code file or past your code in the browser input</b><br><br>
+    Source file : <input type = "file" name = "solution"><br>
+    Language : <select name = "lang" form = "form1">
+      <option value="python">Python</option>
+      <option value="c">C</option>
+      <option value="cpp">C++</option>
+      <option value="java">Java</option>
+      <option value="javascript">Javascript</option>
+    </select><br><br>
+    <textarea rows = "30" cols = "200" name = "code" form = "form1" onfocus="if(this.value==this.defaultValue)this.value='';" onblur="if(this.value=='')this.value=this.defaultValue;" >Paste your code here ....</textarea> <br><br>
+    Submit : <input type = "submit" value = "Submit Solution">
+  </form>
+    <p class="output" >Verdict : {{verdict}}</p>
+  </body>
+
 </html>

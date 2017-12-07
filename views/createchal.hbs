@@ -6,11 +6,13 @@ Create a challenge
   {{> header2}}
 </header>
 <body>
-  <form action = "/createchal" method = "post" id = "form1" enctype = "multipart/form-data"  ><br>
+  <form action = "/createchal" method = "post" id = "form1" enctype = "multipart/form-data"><br>
     name :&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type = "name" name = "challenge_name" placeholder = "Challenge Name"><br>
     description : <textarea rows = "6" cols = "50" name = "description" form = "form1" ></textarea> <br>
     points :&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type = "number" name = "points" ><br>
-    testcases file :&nbsp;&nbsp;&nbsp; <input type = "file" name = "testcases"><br>
+    TLE : <input type = "number" name = "timelimit"><br>
+    STDIN file :&nbsp;&nbsp;&nbsp; <input type = "file" name = "stdin"><br>
+    STDOUT file :&nbsp;&nbsp;&nbsp; <input type = "file" name = "stdout"><br>
     <input type = "submit" name = "validate" >
   </form>
 <body>

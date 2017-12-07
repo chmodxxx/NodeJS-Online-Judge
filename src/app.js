@@ -10,10 +10,28 @@ var mkdirp = require('mkdirp');
 var sql = require('./sql.js');
 var sanitize = require('./sanitize.js');
 var md5 = require('md5');
+var request = require('request');
 var sess = false;
 const dbInfos = db.connInfos;
 const uuidv4 = require('uuid/v4');
+const challdir = "/home/chmod/Desktop/node_app/challenges";
 
+function updatesubmission(verdict, challid, userid, dbinfos, time){
+  let submission = {
+    submission_challid : challid,
+    submission_userid : userid,
+    verdict : verdict,
+    submission_time : time
+  };
+  console.log(submission);
+  sql.insert(dbInfos, "submission", submission , (err, ok) => {
+    if(ok) {
+      return 1;
+    }
+    else return 0;
+
+  });
+}
 app = express();
 
 hbs.registerPartials(__dirname + '/../views/partials')
@@ -175,10 +193,16 @@ app.post('/createchal', (req, res) => {
       }
       });
 
-    var newName = uuidv4() + '.txt';
-
+    var newName1 = uuidv4() + '_stdin' + '.txt';
+    var newName2 = uuidv4() + '_stdout' + '.txt'
     form.on('file', function(field, file) {
-      fs.rename(file.path, path.join(form.uploadDir, newName));
+      if (field === 'stdin') {
+      fs.rename(file.path, path.join(form.uploadDir, newName1));
+      }
+      else {
+        fs.rename(file.path, path.join(form.uploadDir, newName2));
+      }
+
     });
 
     form.on('error', function(err) {
@@ -191,7 +215,9 @@ app.post('/createchal', (req, res) => {
         chall_description : description,
         chall_points : points,
         approved : '0',
-        test_cases : newName
+        chall_stdin : newName1,
+        chall_stdout : newName2,
+        chall_timelimit : timelimit
       }
       sql.insert(dbInfos, "chals", chal , (err, ok) => {
         if(err) {
@@ -220,12 +246,7 @@ app.get('/challenges', (req, res) => {
   var chals ;
   sql.select(dbInfos, "*", "chals","where approved=1 ", (err, rows) => {
   if (rows !== undefined) {
-    chals = rows[0];
-    delete chals.test_cases;
-    delete chals.approved;
-    chals.chall_page = `/chall_page?challID=${chals.chall_id}`;
-    delete chals.chall_id;
-    console.log(chals);
+    chals = rows;
     res.render('challenges.hbs' , {
       chall : chals,
       logged : logged
@@ -240,13 +261,147 @@ app.get('/challenges', (req, res) => {
 });
 
 app.get('/chall_page', (req, res) => {
+  res.render('challenges.hbs', {
+    message : 'You need to specify a challenge'
+  });
+})
+app.get('/chall_page/:challID', (req, res) => {
   sess = req.session;
-  var id = req.query.challID;
-  console.log(id)
+  let logged = sess.logged;
+  var id = req.params.challID;
+  var chal;
+  if (sanitize.isNumeric(id) && id > 0) {
+    sql.select(dbInfos, "*", "chals",`where chall_id=${id}`, (err, row) => {
+        if (row !== undefined) {
+          chal = row[0];
+          sess.chall = chal;
+
+          res.render('chall_page.hbs', {
+            chall : chal,
+            logged : logged
+          });
+        }
+    });
+
+    }
+
+
+  else {
+    res.render('challenges.hbs', {
+        message : 'Invalid Challenge ID'
+    });
+
+    }
+
 });
 
-// app.post
+app.post('/chall_page', (req, res) => {
+  sess = req.session;
+  var chall = sess.chall;
+  var lang;
+  var code;
+  var json;
+  var output;
+  var err;
+  var time;
+  var verdict;
+  var submissionTime;
+  var update = false;
+  let langs = {
+    'python' : 0,
+    'c' : 7,
+    'cpp' : 7 ,
+    'javascript' : 4
+  };
+  if(sess.logged) {
+      lang = req.body.lang;
+      code = req.body.code;
 
-app.listen(8081, () => {
-  console.log('[+] Listening on port 8081 ! ')
+      let stdin = challdir + '/' + chall.chall_name + '/' + chall.chall_stdin;
+      let stdout = challdir + '/' + chall.chall_name + '/' + chall.chall_stdout;
+
+      fs.readFile(stdin, 'utf8', function (err,data) {
+        if (err) {
+          return console.log(err);
+        }
+        json = {
+          language : langs[lang],
+          stdin : data,
+          code : code
+        };
+        request.post({
+              url: 'http://127.0.0.1:8080/compile',
+              form:  json
+          },
+          function (err, httpResponse, body) {
+              submissionTime = new Date(Date.now());
+              body = JSON.parse(body);
+              err = body['errors'];
+              output = body['output'];
+              time = body['time'];
+
+              if (time > chall.chall_timelimit ) {
+                verdict = "Time Limit Exceeded";
+                res.render('chall_page.hbs', {
+                  verdict : 'Time limit exceeded'
+                });
+              }
+              else if(err !== '') {
+                verdict = "Compilation Error";
+                res.render('chall_page.hbs' , {
+                  verdict : 'Compilation Error'
+                });
+              }
+
+              else {
+                fs.readFile(stdout, 'utf8', function (err,data) {
+                  if (err) {
+                    return console.log(err);
+                  }
+                  else {
+                    if(output === data) {
+                      verdict = "Accepted";
+                      res.render('chall_page', {
+                        verdict : 'Accepted'
+                      });
+                    }
+                    else {
+                      verdict = "Wrong Answer";
+                      res.render('chall_page', {
+                        verdict : 'Wrong Answer'
+                      });
+                    }
+                    update = true;
+                  }
+              if(update) updatesubmission(verdict, chall.chall_id, sess.userInfo.id, dbInfos, submissionTime)});
+            }
+            if (!update) updatesubmission(verdict, chall.chall_id, sess.userInfo.id, dbInfos, submissionTime);
+        });
+
+  });
+
+}
+
+  else {
+    res.redirect('/login');
+  }
+})
+
+app.get('/submissions', (req, res) => {
+  sess = req.session;
+
+  sql.select(dbInfos, '*', 'submission' , `where submission_userid=${sess.userInfo.id}` , (err, row) => {
+    if (row !== undefined) {
+      let submissions = row;
+      console.log(submissions);
+      res.render('submissions.hbs', {
+        submission : submissions
+      });
+  }
+  else {
+    console.log('nok');
+  }});
+});
+app.listen(8082, () => {
+  console.log('[+] Listening on port 8082 ! ')
 });
