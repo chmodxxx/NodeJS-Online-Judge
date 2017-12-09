@@ -11,12 +11,15 @@ var sql = require('./sql.js');
 var sanitize = require('./sanitize.js');
 var md5 = require('md5');
 var request = require('request');
+var morgan = require('morgan');
 var sess = false;
 const dbInfos = db.connInfos;
 const uuidv4 = require('uuid/v4');
 const challdir = "/home/chmod/Desktop/node_app/challenges";
+const accessLogStream = fs.createWriteStream(path.join('/home/chmod/Desktop/node_app/logs', 'access.log'), {flags: 'a'});
 
-function updatesubmission(verdict, challid, userid, dbinfos, time, lang){
+
+function updateSubmission(verdict, challid, userid, dbinfos, time, lang){
   let submission = {
     submission_challid : challid,
     submission_userid : userid,
@@ -33,6 +36,26 @@ function updatesubmission(verdict, challid, userid, dbinfos, time, lang){
 
   });
 }
+
+function checkPassword(password) {
+  var returnMessage ;
+  if (password.length < 6) {
+    returnMessage = "Password should have at least 6 characters";
+  }
+  else if (password.length >= 36) {
+    returnMessage = "Password too long";
+  }
+  else if (password.search(/\d/) === -1) {
+    returnMessage = "Password should contain some numbers";
+  }
+  else if (password.search(/[A-Z]/) === -1) {
+    returnMessage = "Password should contain an uppercase character";
+  }
+  else returnMessage = "";
+
+  return returnMessage;
+}
+
 app = express();
 
 hbs.registerPartials(__dirname + '/../views/partials')
@@ -40,6 +63,8 @@ hbs.registerPartials(__dirname + '/../views/partials')
 app.use(session({secret: 'L337 STr!nG'}));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(morgan('combined',  {stream: accessLogStream}));
+app.use('/static', express.static('/home/chmod/Desktop/node_app/public'));
 
 app.set('view engine', 'hbs');
 app.set('views','/home/chmod/Desktop/node_app/views')
@@ -60,6 +85,63 @@ app.get('/', (req, res) => {
 
 app.get('/login', (req, res) => {
   res.render('login.hbs');
+});
+
+app.post('/checkform', (req , res) => {
+  let username = req.body.username;
+  let password = req.body.password;
+  let passwordConfirmation = req.body.passwordConfirmation;
+  let email = req.body.email;
+
+  let response = {
+    usernameValid : "Username can't be empty",
+    passwordValid : "Password  can't be empty",
+    passwordsMatch : "",
+    emailValid :  "Email can't be empty"
+  };
+
+  if(username !== "") {
+    response.usernameValid = "";
+  }
+  if (!sanitize.isAlphanum(username)) {
+    response.usernameValid = "Username should contain only alphanum chars";
+  }
+  else {
+    sql.select(dbInfos,"*","user",`where username = '${username}'`, (err, row) => {
+      if (row !== undefined) {
+        response.usernameValid = "Username is already used";
+      }
+      else {
+        response.usernameValid = "Username is already used";
+      }
+    })
+
+  }
+  if(password !== "") {
+    response.passwordValid = checkPassword(password);
+  }
+  if (passwordConfirmation !== password) {
+    response.passwordsMatch = "Passwords don't match";
+  }
+  if(email !== "") {
+    response.emailValid = "";
+  }
+  if (!sanitize.isEmail(email)){
+    response.emailValid = "Email Format invalid";
+  }
+  else {
+    sql.select(dbInfos, "*", "user" , `where email = '${email}'`, (err, row) => {
+    if (row !== undefined) {
+      response.emailValid = "Email already used";
+    }
+    else {
+      response.emailValid = "Email is valid";
+    }
+    }
+  );
+  }
+
+  res.send(response);
 });
 
 app.post('/login', (req, res) => {
@@ -384,9 +466,9 @@ app.post('/chall_page', (req, res) => {
                     }
                     update = true;
                   }
-              if(update) updatesubmission(verdict, chall.chall_id, sess.userInfo.id, dbInfos, submissionTime, lang)});
+              if(update) updateSubmission(verdict, chall.chall_id, sess.userInfo.id, dbInfos, submissionTime, lang)});
             }
-            if (!update) updatesubmission(verdict, chall.chall_id, sess.userInfo.id, dbInfos, submissionTime, lang);
+            if (!update) updateSubmission(verdict, chall.chall_id, sess.userInfo.id, dbInfos, submissionTime, lang);
         });
 
   });
@@ -424,6 +506,11 @@ app.get('/submissions', (req, res) => {
     res.redirect('/login')
   }
 });
+
+app.get('/scoreboard', (req, res) => {
+  res.send('TODO');
+});
+
 app.listen(8082, () => {
   console.log('[+] Listening on port 8082 ! ')
 });

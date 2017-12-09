@@ -5,13 +5,20 @@
 <head>
   {{> header}}
 </head>
+<script src="../static/javascript/jquery.min.js"></script>
+<script src="../static/javascript/ajax.js"></script>
+
 <body>
     <b> {{reason}} </b>
     <form action = "/register" method = "POST">
-      <input type = "username" name = "username" placeholder = "Username"><br>
-      <input type = "email" name = "email" placeholder = "Email"><br>
-      <input type = "password" name = "password" placeholder = "Password"><br>
-      <input type = "password" name = "passwordConfirmation" placeholder = "Retype Password"></br>
+      <input type = "username" name = "username" id = "username" placeholder = "Username" oninput = "checkform()" >
+      <div id = "usernameValid"> </div>
+      <input type = "email" name = "email" id = "email" placeholder = "Email"  oninput = "checkform()"><br>
+      <div id = "emailValid"> </div>
+      <input type = "password" name = "password" id = "password" placeholder = "Password" oninput = "checkform()"><br>
+      <div id = "passwordValid"> </div>
+      <input type = "password" name = "passwordConfirmation" id = "passwordConfirmation" placeholder = "Retype Password" oninput = "checkform()" ></br>
+      <div id = "passwordsMatch"> </div>
       <input type = "submit" value = "Register">
     </form>
 </body>

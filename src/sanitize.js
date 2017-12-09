@@ -1,15 +1,15 @@
 var validator = require('validator');
 
 function isEmail(input){
-  return validator.isEmail(input);
+  return validator.isEmail(String(input));
 }
 
 function isAlphanum(input) {
-  return validator.isAlphanumeric(input);
+  return validator.isAlphanumeric(String(input));
 }
 
 function escape(input) {
-  return validator.escape(input);
+  return validator.escape(String(input));
 }
 
 function isNumeric(input){
