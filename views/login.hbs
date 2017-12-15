@@ -5,12 +5,25 @@
 <head>
   {{> header}}
 </head>
-<body>
-    <b>{{reason}}</b>
-    <form action = "/login" method = "POST">
-      <input type = "username" name = "username" placeholder = "Username">
-      <input type = "password" name = "password" placeholder = "Password">
-      <input type = "submit" value = "Login">
-    </form>
-</body>
-</html>
+<div class="container">
+  <h2>Enter your credentials:</h2>
+  <div class="alert alert-danger">
+    {{reason}}
+ </div>
+  <form action="/login" method="POST">
+    <div class="form-group">
+      <label for="username">Username:</label>
+      <input type="username" class="form-control" id="email" placeholder="Enter username" name="username">
+    </div>
+    <div class="form-group">
+      <label for="pwd">Password:</label>
+      <input type="password" class="form-control" id="pwd" placeholder="Enter password" name="password">
+    </div>
+    <div class="form-check">
+      <label class="form-check-label">
+        <input class="form-check-input" type="checkbox" name="remember"> Remember me
+      </label>
+    </div>
+    <button type="submit" class="btn btn-primary" value="LOGIN">Submit</button>
+  </form>
+</div>

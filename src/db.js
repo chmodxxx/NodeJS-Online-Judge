@@ -19,7 +19,7 @@ function End(conn) {
 }
 
 function Select(con, columns, table, additionnal = undefined, callback) {
-  con.query(`SELECT ${columns} FROM ${table} ${additionnal}`, (err,rows) => {
+  con.query(`SELECT ${columns} FROM ${table} ${additionnal}`, (err, rows) => {
     if (err) callback(err);
     callback(undefined, rows);
 });
@@ -32,11 +32,23 @@ function Insert(con, table, object, callback){
   });
 }
 
+function Update(con, table, updatestatement , additionnal, callback) {
+  con.query(`UPDATE ${table} set ${updatestatement} ${additionnal}`, (err , ok) => {
+    if (err) {
+      callback(err);
+    }
+    else {
+      callback(undefined, 1);
+    }
+  })
+}
+
 module.exports = {
    connInfos : connInfos,
    Init : Init,
    Select : Select,
    Insert : Insert,
+   Update : Update,
    End : End
 };
 // //missing delete & update

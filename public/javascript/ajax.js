@@ -29,3 +29,26 @@ function checkform() {
 
     });
 }
+
+function compile() {
+  let lang = document.getElementById("lang").value;
+  let code = document.getElementById("code").value;
+
+  $.ajax({
+
+      url : '/compile',
+      type : 'POST',
+      data : {'lang' : lang,
+              'code' : code
+              },
+
+    dataType : 'html',
+
+    success : function(res, stat) {
+      let response = JSON.parse(res);
+      document.getElementById('verdict').innerHTML = "Verdict : " + response['verdict'];
+    }
+    
+  });
+
+}

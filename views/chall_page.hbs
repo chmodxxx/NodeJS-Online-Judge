@@ -2,13 +2,14 @@
 <title>
   Challenges page
 </title>
+
 <head>
-  {{#if logged}}
   {{> header2}}
-  {{else}}
-  {{> header}}
-  {{/if}}
 </head>
+
+<script src="../static/javascript/jquery.min.js"></script>
+<script src="../static/javascript/ajax.js"></script>
+
 <style>
 .output{
 	font-family: monospace;
@@ -20,26 +21,25 @@
 </style>
 <body>
   {{#chall}}
-  Challenge name : {{chall_name}}<br>
-  Challenge points : {{chall_points}}<br>
-  Challenge description : {{chall_description}}<br>
-  Challenge Time limit : {{chall_timelimit}}<br>
+  Challenge name : {{ChallengeName}}<br>
+  Challenge points : {{ChallengePoints}}<br>
+  Challenge description : {{ChallengeDescription}}<br>
+  Challenge Time limit : {{ChallengeTLE}}<br>
   <br>
   {{/chall}}
-  <form method = "POST" action = "/chall_page" id = "form1" >
+
     <b>You can either upload source code file or past your code in the browser input</b><br><br>
     Source file : <input type = "file" name = "solution"><br>
-    Language : <select name = "lang" form = "form1">
-      <option value="python">Python</option>
-      <option value="c">C</option>
-      <option value="cpp">C++</option>
-      <option value="java">Java</option>
-      <option value="javascript">Javascript</option>
+    Language : <select name = "lang"  id = "lang">
+      <option value="Python">Python</option>
+      <option value="C">C</option>
+      <option value="C++">C++</option>
+      <option value="Java">Java</option>
+      <option value="Javascript">Javascript</option>
     </select><br><br>
-    <textarea rows = "30" cols = "200" name = "code" form = "form1" onfocus="if(this.value==this.defaultValue)this.value='';" onblur="if(this.value=='')this.value=this.defaultValue;" >Paste your code here ....</textarea> <br><br>
-    Submit : <input type = "submit" value = "Submit Solution">
-  </form>
-    <p class="output" >Verdict : {{verdict}}</p>
+    <textarea rows = "30" cols = "200" name = "code"  id = "code" onfocus="if(this.value==this.defaultValue)this.value='';" onblur="if(this.value=='')this.value=this.defaultValue;" >Paste your code here ....</textarea> <br><br>
+    Submit : <input type = "submit" value = "Submit Solution" onclick = "compile()">
+    <p class="output" id = "verdict" ></p>
   </body>
 
 </html>

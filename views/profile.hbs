@@ -6,17 +6,39 @@ Profile Page
   {{> header2}}
 </header>
 <body>
-  Welcome {{username}}, you are rank {{rank}} <br><br>
-  <!-- <form action = "update" method = "POST"> -->
-  <li>
-    <a href = "submissions">Submissions history</a>
-  </li>
-  <li>
-    <a href = "updateProfile">Update infos</a>
-  </li>
-  <li>
-    <a href ="createchal">Create a challenge</a>
-  </li>
-  <!-- </form> -->
+  <div class="jumbotron jumbotron-fluid">
+  <div class="container">
+    <h1 class="display-5">Welcome {{username}}, you are rank {{rank}} </h1>
+  </div>
+</div>
+
+
+  <a class="btn btn-primary" data-toggle="collapse" href="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
+     Check your submissions history
+   </a>
+   <div class="collapse" id="collapseExample">
+  <div class="card card-block">
+    Here you can check your submissions history with time of submission, challenge name, and the language used.
+    <a href="/submissions">Submissions Page</a>
+  </div>
+</div><br>
+  <a class="btn btn-primary" data-toggle="collapse" href="#collapseExample2" aria-expanded="false" aria-controls="collapseExample">
+     Create a challenge
+   </a>
+   <div class="collapse" id="collapseExample2">
+  <div class="card card-block">
+    Here you can create a challenge and you can provide all the infos related to the challenge, and wait for admin to approve it,
+    <a href="/createchal">Create a challenge</a>
+  </div>
+</div><br>
+  <a class="btn btn-primary" data-toggle="collapse" href="#collapseExample3" aria-expanded="false" aria-controls="collapseExample">
+     Update your informations
+   </a>
+   <div class="collapse" id="collapseExample3">
+  <div class="card card-block">
+    Here you can check your update informations related to your profile like email or password.
+    <a href="/updateprofile">Update profile</a>
+  </div>
+  </div>
 <body>
 </html>

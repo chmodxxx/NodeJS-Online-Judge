@@ -2,58 +2,148 @@ var express = require('express');
 var hbs = require('hbs');
 var bodyParser = require('body-parser');
 var session = require('express-session');
-var db = require('./db.js');
 var fs = require('fs');
 var formidable = require('formidable');
 var path = require('path');
 var mkdirp = require('mkdirp');
-var sql = require('./sql.js');
-var sanitize = require('./sanitize.js');
+var sanitize = require("mongo-sanitize");
 var md5 = require('md5');
 var request = require('request');
 var morgan = require('morgan');
 var sess = false;
-const dbInfos = db.connInfos;
+var {ObjectID} = require('mongodb');
+var {mongoose} = require('./db/mongoose');
+var {User} = require('./models/user');
+var {Challenge} = require('./models/challenge');
+var {Submission} = require('./models/submission');
+
 const uuidv4 = require('uuid/v4');
 const challdir = "/home/chmod/Desktop/node_app/challenges";
 const accessLogStream = fs.createWriteStream(path.join('/home/chmod/Desktop/node_app/logs', 'access.log'), {flags: 'a'});
 
+//
+// function updateSubmission(verdict, challid, userid, dbinfos, time, lang){
+//   let submission = {
+//     submission_challid : challid,
+//     submission_userid : userid,
+//     verdict : verdict,
+//     submission_time : time,
+//     lang : lang
+//   };
+//
+//   sql.insert(dbInfos, "submission", submission , (err, ok) => {
+//     if(ok) {
+//       return 1;
+//     }
+//     else return 0;
+//
+//   });var {User} = require('./models/user');
 
-function updateSubmission(verdict, challid, userid, dbinfos, time, lang){
-  let submission = {
-    submission_challid : challid,
-    submission_userid : userid,
-    verdict : verdict,
-    submission_time : time,
-    lang : lang
-  };
+// }
+//
+// function checkPassword(password) {
+//   var returnMessage ;
+//   if (password.length < 6) {var {User} = require('./models/user');
+//
+//     returnMessage = "Password should have at least 6 characters";
+//   }var {User} = require('./models/user');
+//
+//   else if (password.length >= 36) {
+//     returnMessage = "Password too long";
+//   }
+//   else if (password.search(/\d/) === -1) {
+//     returnMessage = "Password should contain some numbers";
+//   }
+//   else if (password.search(/[A-Z]/) === -1) {var {User} = require('./models/user');
+//
+//     returnMessage = "Password should contain an uppercase character";
+//   }
+//   else returnMessage = "";
+//
+//   return returnMessage;
+// }
 
-  sql.insert(dbInfos, "submission", submission , (err, ok) => {
-    if(ok) {
-      return 1;
+function apicompiler() {
+  fs.readFile(stdin, 'utf8', function (err,data) {
+    if (err) {
+      return console.log(err);
     }
-    else return 0;
+    json = {
+      language : langs[lang],
+      stdin : data,
+      code : code
+    };
+    request.post({
+          url: 'http://127.0.0.1:8080/compile',
+          form:  json
+      },
+      function (err, httpResponse, body) {
+          submissionTime = new Date(Date.now());
+          body = JSON.parse(body);
+          err = body['errors'];
+          output = body['output'];
+          time = body['time'];
 
+          if (time > chall.ChallengeTLE) {
+            verdict = "Time Limit Exceeded";
+            verdictdb = verdict;
+            res.send(JSON.stringify({logged : logged, verdict : verdict}));
+          }
+          else if(err !== '') {
+            verdict = "Compilation Error";
+            verdictdb = verdict;
+            res.send(JSON.stringify({logged : logged, verdict : verdict}));
+          }
+
+          else {
+            fs.readFile(stdout, 'utf8', function (err,data) {
+              if (err) {
+                return console.log(err);
+              }
+              else {
+                if(output === data) {
+                  verdict = "Accepted";
+                  verdictdb = verdict;
+                  let solved = sess.userInfo.chalsolved;
+
+                  if (solved.indexOf(chall._id) !== -1) {
+                    alreadysolved = true;
+                  }
+                  else {
+                    solved.push(chall._id);
+                  }
+                  if(!alreadysolved){
+                    try {
+                      Challenge.where({ _id: chall._id}).update({ $inc: { ChallengeNbSolvers: 1}}).exec();
+                      User.where({ _id: sess.userInfo._id}).update({
+                        $inc: { score: chall.ChallengePoints },
+                        $set: { chalsolved: solved }
+                      }).exec();
+                      verdict = `Accepted! you gained ${chall.ChallengePoints} `;
+                    }
+                    catch (e) {
+                      verdict = 'Oops something went wrong';
+                    }
+
+
+                  }
+                else {
+                    verdict = "Accepted! but you already solved this challenge";
+                    verdictdb = "Accepted"
+                  }
+                  res.send(JSON.stringify({logged : logged, verdict : verdict}));
+                }
+                else {
+                  verdict = "Wrong Answer";
+                  verdictdb = verdict;
+                  res.send(JSON.stringify({logged : logged, verdict : verdict}));
+                }
+
+              }
+            });
+          }
+    });
   });
-}
-
-function checkPassword(password) {
-  var returnMessage ;
-  if (password.length < 6) {
-    returnMessage = "Password should have at least 6 characters";
-  }
-  else if (password.length >= 36) {
-    returnMessage = "Password too long";
-  }
-  else if (password.search(/\d/) === -1) {
-    returnMessage = "Password should contain some numbers";
-  }
-  else if (password.search(/[A-Z]/) === -1) {
-    returnMessage = "Password should contain an uppercase character";
-  }
-  else returnMessage = "";
-
-  return returnMessage;
 }
 
 app = express();
@@ -62,8 +152,9 @@ hbs.registerPartials(__dirname + '/../views/partials')
 
 app.use(session({secret: 'L337 STr!nG'}));
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(morgan('combined',  {stream: accessLogStream}));
+app.use(bodyParser.urlencoded({ extended: true }));var {User} = require('./models/user');
+
+app.use(morgan(':remote-addr - :remote-user [:date[clf]] ":method :url " :status  ":user-agent"',  {stream: accessLogStream}));
 app.use('/static', express.static('/home/chmod/Desktop/node_app/public'));
 
 app.set('view engine', 'hbs');
@@ -83,88 +174,81 @@ app.get('/', (req, res) => {
   }
 });
 
+
 app.get('/login', (req, res) => {
   res.render('login.hbs');
 });
 
-app.post('/checkform', (req , res) => {
-  let username = req.body.username;
-  let password = req.body.password;
-  let passwordConfirmation = req.body.passwordConfirmation;
-  let email = req.body.email;
-
-  let response = {
-    usernameValid : "Username can't be empty",
-    passwordValid : "Password  can't be empty",
-    passwordsMatch : "",
-    emailValid :  "Email can't be empty"
-  };
-
-  if(username !== "") {
-    response.usernameValid = "";
-  }
-  if (!sanitize.isAlphanum(username)) {
-    response.usernameValid = "Username should contain only alphanum chars";
-  }
-  else {
-    sql.select(dbInfos,"*","user",`where username = '${username}'`, (err, row) => {
-      if (row !== undefined) {
-        response.usernameValid = "Username is already used";
-      }
-      else {
-        response.usernameValid = "Username is already used";
-      }
-    })
-
-  }
-  if(password !== "") {
-    response.passwordValid = checkPassword(password);
-  }
-  if (passwordConfirmation !== password) {
-    response.passwordsMatch = "Passwords don't match";
-  }
-  if(email !== "") {
-    response.emailValid = "";
-  }
-  if (!sanitize.isEmail(email)){
-    response.emailValid = "Email Format invalid";
-  }
-  else {
-    sql.select(dbInfos, "*", "user" , `where email = '${email}'`, (err, row) => {
-    if (row !== undefined) {
-      response.emailValid = "Email already used";
-    }
-    else {
-      response.emailValid = "Email is valid";
-    }
-    }
-  );
-  }
-
-  res.send(response);
-});
+// app.post('/checkform', (req , res) => {
+//   let username = req.body.username;
+//   let password = req.body.password;
+//   let passwordConfirmation = req.body.passwordConfirmation;
+//   let email = req.body.email;
+//
+//   let response = {
+//     usernameValid : "Username can't be empty",
+//     passwordValid : "Password  can't be empty",
+//     passwordsMatch : "",
+//     emailValid :  "Email can't be empty"
+//   };
+//
+//         response.usernameValid = "Username is already used";
+//       }
+//     })
+//
+//   }
+//   if(password !== "") {
+//     response.passwordValid = checkPassword(password);
+//   }
+//   if (passwordConfirmation !== password) {
+//     response.passwordsMatch = "Passwords don't match";
+//   }
+//   if(email !== "") {
+//     response.emailValid = "";
+//   }
+//   if (!sanitize.isEmail(email)){
+//     response.emailValid = "Email Format invalid";
+//   }
+//   else {
+//     sql.select(dbInfos, "*", "user" , `where email = '${email}'`, (err, row) => {
+//     if (row !== undefined) {
+//       response.emailValid = "Email already used";
+//     }
+//     else {
+//       response.emailValid = "Email is valid";
+//     }
+//     }
+//   );
+//   }
+//
+//   res.send(response);
+// });
 
 app.post('/login', (req, res) => {
   sess = req.session;
-  var username = req.body.username;
-  var password = req.body.password;
-  var user;
-  sql.select(dbInfos, "*", "user",`where username = '${username}' and password = '${md5(password)}' `, (err, row) => {
-  if (row !== undefined) {
-    user = row[0];
-    sess.logged = true ;
-    sess.userInfo = user;
-    res.redirect('/profile');
+  var username = sanitize(req.body.username);
+  var password = sanitize(req.body.password);
+  var userobject;
+  User.findOne({
+    username: username,
+    password: md5(password)
+  }).then((user => {
+    if (user !== null) {
+      sess.userInfo = user;
+      sess.logged = true;
+      res.redirect('/profile');
+    }
+    else {
+      res.render('login.hbs', {
+        reason :' Wrong Password or Username'
+      });
+    }
+  }));
 
-  }
-  else {
-    res.render('login.hbs', {
-      reason : 'Wrong Password/Username'
-  });
-  }
-  })
 
 });
+
+
 
 app.get('/register', (req, res) => {
   sess = req.session;
@@ -181,33 +265,34 @@ app.post('/register', (req, res) => {
     res.render('/profile');
   }
   else {
-  var username = req.body.username;
-  var password = req.body.password;
-  var passwordConf = req.body.passwordConfirmation;
-  var email = req.body.email;
-  var user = {
+  var username = sanitize(req.body.username);
+  var password = sanitize(req.body.password);
+  var passwordConf = sanitize(req.body.passwordConfirmation);
+  var email = sanitize(req.body.email);
+  var user =  new User({
       username : username,
       password : md5(password),
-      email : email
-  };
+      email : email,
+      chalsolved : []
+  });
   if( password !== passwordConf) {
     res.render('register.hbs', {
       reason : 'Passwords dont match'
     })
   }
   else {
-    sql.insert(dbInfos, "user", user , (err, ok) => {
-      if(ok) {
+    user.save().then((user) => {
+      if(user !== null) {
         res.render('register.hbs', {
-          reason : 'Registation successfull! You can login now!'
-        })
-      }
-      else {
-        res.render('register.hbs', {
-          reason : 'Registration unsuccessfull!'
-        })
-      }
-    } )
+        reason : 'Registration sucesfull! You can login now!'
+      })
+    }
+    else {
+      res.render('register.hbs', {
+        reason : 'Registration unsuccesfull'
+      });
+    }
+    });
 
   }
 }});
@@ -230,11 +315,16 @@ app.get('/logout', (req, res) => {
 
 app.get('/profile', (req, res) => {
   sess = req.session;
+  var rank;
   if (sess.logged) {
-    res.render('profile.hbs',{
+    User.find(sess.userInfo).sort({ score: -1}).then((user) => {
+      rank = user.findIndex(item => item.username === sess.userInfo.username) + 1 ;
+
+    res.render('profile.hbs', {
       username : sess.userInfo.username,
-      rank : sess.userInfo.rank
+      rank : rank
     });
+  });
   }
   else {
     res.redirect('/');
@@ -265,18 +355,18 @@ app.post('/createchal', (req, res) => {
 
     form.on('field', function(name, field) {
         if (name === "challenge_name") {
-          chalname = field;
+          chalname = sanitize(field);
           mkdirp(__dirname + '/../challenges/' + chalname);
           form.uploadDir = path.join(__dirname, '/../challenges/', chalname, '/');
       }
       if (name === "description") {
-        description = field;
+        description = sanitize(field);
       }
       if (name === "points") {
-        points = field;
+        points = sanitize(field);
       }
       if (name == "timelimit") {
-        tle = field;
+        tle = sanitize(field);
       }
       });
 
@@ -297,96 +387,96 @@ app.post('/createchal', (req, res) => {
     });
 
     form.on('end', function() {
-      var chal = {
-        chall_name : chalname,
-        chall_description : description,
-        chall_points : points,
-        approved : '0',
-        chall_stdin : newName1,
-        chall_stdout : newName2,
-        chall_timelimit : tle
-      }
-      sql.insert(dbInfos, "chals", chal , (err, ok) => {
-        if(err) {
-          res.end('challenge not created');
+      var chal = new Challenge({
+        ChallengeName : chalname,
+        ChallengeDescription : description,
+        ChallengePoints : points,
+        ChallengeSTDIN : newName1,
+        ChallengeSTDOUT : newName2,
+        ChallengeTLE : tle
+      });
+      chal.save().then((chal) => {
+        if(chal !== null) {
+          res.render('createchal.hbs', {
+            message : 'Success! The challenge is created and waiting for admin approval'
+            }
+          );
+
+        }
+        else {
+          res.end('Challenge not created');
         }
 
       });
-      res.render('createchal.hbs',{
-                message : 'Success! The challenge is created and waiting for admin approval'
-              }
-              );
+
     });
 
     form.parse(req);
-
-
   }
   else {
     sess.origin = 'create_chal';
     res.redirect('/login');
   }
-})
+});
 
 app.get('/challenges', (req, res) => {
   sess = req.session;
   var logged = sess.logged;
-  var chals ;
-  sql.select(dbInfos, "*", "chals","where approved=1 ", (err, rows) => {
-  if (rows !== undefined) {
-    chals = rows;
-    res.render('challenges.hbs' , {
-      chall : chals,
-      logged : logged
-    })
-  }
-  else {
-    res.send('<b>No challenges are uploaded yet</b> Go back to <a href = "/">home</a>')
-  }
 
+  Challenge.find({Approved: true}).then((chals) => {
+    if(chals !== null ){
+      res.render('challenges.hbs', {
+        chall: chals,
+        logged: logged
+      });
 
-})
+    }
+    else {
+       res.send('<b>No challenges are uploaded yet</b> Go back to <a href = "/">home</a>');
+    }
+  });
 });
 
 app.get('/chall_page', (req, res) => {
   res.render('challenges.hbs', {
-    message : 'You need to specify a challenge'
+    message: 'You need to specify a challenge'
   });
-})
+});
+
 app.get('/chall_page/:challID', (req, res) => {
   sess = req.session;
   let logged = sess.logged;
-  var id = req.params.challID;
-  var chal;
-  if (sanitize.isNumeric(id) && id > 0) {
-    sql.select(dbInfos, "*", "chals",`where chall_id=${id}`, (err, row) => {
-        if (row !== undefined) {
-          chal = row[0];
-          sess.chall = chal;
+  var id = sanitize(req.params.challID);
+  if (ObjectID.isValid(id)) {
+    Challenge.find({_id: id}).then((challenge) => {
 
-          res.render('chall_page.hbs', {
-            chall : chal,
-            logged : logged
-          });
-        }
+      if(challenge.length !== 0) {
+        sess.chall = challenge;
+
+        res.render('chall_page.hbs', {
+          chall: challenge,
+          logged: logged
+        });
+      }
+      else {
+        res.render('challenges.hbs', {
+           message: 'No such Challenge'
+         });
+      }
     });
-
     }
-
-
   else {
     res.render('challenges.hbs', {
-        message : 'Invalid Challenge ID'
-    });
-
-    }
+       message: 'Invalid Challenge ID'
+     });
+  }
 
 });
 
-app.post('/chall_page', (req, res) => {
+app.post('/compile', (req, res) => {
   sess = req.session;
   let logged = sess.logged;
-  var chall = sess.chall;
+  var chall = sess.chall[0];
   var lang;
   var code;
   var json;
@@ -394,84 +484,108 @@ app.post('/chall_page', (req, res) => {
   var err;
   var time;
   var verdict;
-  var submissionTime;
+  var verdictdb;
   var update = false;
+  let alreadysolved = false;
   let langs = {
-    'python' : 0,
-    'c' : 7,
-    'cpp' : 7 ,
-    'javascript' : 4
+    'Python' : 0,
+    'C' : 7,
+    'C++' : 7 ,
+    'Javascript' : 4
   };
   if(sess.logged) {
-      lang = req.body.lang;
-      code = req.body.code;
+      lang = sanitize(req.body.lang);
+      code = sanitize(req.body.code);
 
-      let stdin = challdir + '/' + chall.chall_name + '/' + chall.chall_stdin;
-      let stdout = challdir + '/' + chall.chall_name + '/' + chall.chall_stdout;
+      let stdin = challdir + '/' + chall.ChallengeName + '/' + chall.ChallengeSTDIN;
+      let stdout = challdir + '/' + chall.ChallengeName + '/' + chall.ChallengeSTDOUT;
 
-      fs.readFile(stdin, 'utf8', function (err,data) {
-        if (err) {
-          return console.log(err);
-        }
-        json = {
-          language : langs[lang],
-          stdin : data,
-          code : code
-        };
-        request.post({
-              url: 'http://127.0.0.1:8080/compile',
-              form:  json
-          },
-          function (err, httpResponse, body) {
-              submissionTime = new Date(Date.now());
-              body = JSON.parse(body);
-              err = body['errors'];
-              output = body['output'];
-              time = body['time'];
+      // apicompiler(); need to turn this into a single function
 
-              if (time > chall.chall_timelimit ) {
-                verdict = "Time Limit Exceeded";
-                res.render('chall_page.hbs', {
-                  verdict : 'Time limit exceeded',
-                  logged : logged
-                });
-              }
-              else if(err !== '') {
-                verdict = "Compilation Error";
-                res.render('chall_page.hbs' , {
-                  verdict : 'Compilation Error',
-                  logged : logged
-                });
-              }
+        fs.readFile(stdin, 'utf8', function (err,data) {
+          if (err) {
+            return console.log(err);
+          }
+          json = {
+            language : langs[lang],
+            stdin : data,
+            code : code
+          };
+          request.post({
+                url: 'http://127.0.0.1:8080/compile',
+                form:  json
+            },
+            function (err, httpResponse, body) {
+                body = JSON.parse(body);
+                err = body['errors'];
+                output = body['output'];
+                time = body['time'];
 
-              else {
-                fs.readFile(stdout, 'utf8', function (err,data) {
-                  if (err) {
-                    return console.log(err);
-                  }
-                  else {
-                    if(output === data) {
-                      verdict = "Accepted";
-                      res.render('chall_page.hbs', {
-                        verdict : 'Accepted',
-                        logged : logged
-                      });
+                if (time > chall.ChallengeTLE) {
+                  verdict = "Time Limit Exceeded";
+                  verdictdb = verdict;
+                  res.send(JSON.stringify({logged: logged, verdict: verdict}));
+                }
+                else if(err !== '') {
+                  verdict = "Compilation Error";
+                  verdictdb = verdict;
+                  res.send(JSON.stringify({logged: logged, verdict: verdict}));
+                }
+              
+                else {
+                  fs.readFile(stdout, 'utf8', function (err, data) {
+                    if (err) {
+                      return console.log(err);
                     }
                     else {
-                      verdict = "Wrong Answer";
-                      res.render('chall_page.hbs', {
-                        verdict : 'Wrong Answer',
-                        logged : logged
-                      });
-                    }
-                    update = true;
-                  }
-              if(update) updateSubmission(verdict, chall.chall_id, sess.userInfo.id, dbInfos, submissionTime, lang)});
-            }
-            if (!update) updateSubmission(verdict, chall.chall_id, sess.userInfo.id, dbInfos, submissionTime, lang);
-        });
+                      if(output === data) {
+                        verdict = "Accepted";
+                        let solved = sess.userInfo.chalsolved;
 
-  });
+                        if (solved.indexOf(chall._id) !== -1) {
+                          alreadysolved = true;
+                        }
+                        else {
+                          solved.push(chall._id);
+                        }
+                        if(!alreadysolved){
+                          try {
+                            Challenge.where({ _id: chall._id}).update({ $inc: { ChallengeNbSolvers: 1}}).exec();
+                            User.where({ _id: sess.userInfo._id}).update({
+                              $inc: { score: chall.ChallengePoints },
+                              $set: { chalsolved: solved }
+                            }).exec();
+                            verdict = 'Accepted';
+                            verdictdb = verdict;
+                          }
+                          catch (e) {
+                            verdict = 'Oops something went wrong';
+                          }
+                        }
+                      else {
+                          verdict = "Accepted! but you already solved this challenge";
+                          verdictdb = "Accepted";
+                        }
+                      }
+                      else {
+                        verdict = "Wrong Answer";
+                        verdictdb = verdict;
+                      }
+                      res.send(JSON.stringify({logged : logged, verdict : verdict}));
+
+                    }
+                  });
+                }
+
+                let submission = new Submission({
+                      SubmissionLang: lang,
+                      SubmissionChallID: chall._id,
+                      SubmissionVerdict: verdictdb,
+                      SubmissionUserID: sess.userInfo._id,
+                });
+                submission.save();
+          });
+        });
 
 }
 
@@ -480,27 +594,38 @@ app.post('/chall_page', (req, res) => {
     sess.origin.challid = chall.chall_id;
     res.redirect('/login');
   }
-})
+});
 
 app.get('/submissions', (req, res) => {
   sess = req.session;
-  if(sess.logged){
-  sql.select(dbInfos, 'submission.lang, submission.verdict, submission.submission_time, chal.chall_name, chal.chall_id', 'submission submission' , `left join chals chal on chal.chall_id=submission.submission_challid where submission_userid=${sess.userInfo.id} ` , (err, row) => {
-    if (row !== undefined) {
-      let submissions = row;
-      console.log(submissions);
-      res.render('submissions.hbs', {
-        submission : submissions
-      });
-    }
 
-  else {
+  if(sess.logged){
+  Submission.aggregate([
+    {  $match  : { SubmissionUserID : mongoose.Types.ObjectId(sess.userInfo._id)  } },
+
+            { $lookup : {
+                from: "challenges",
+                foreignField: "_id" ,
+                localField: "SubmissionChallID",
+                as: "chal"
+           }
+
+  }]).then((submissions) => {
+    for (var i = 0 ; i < submissions.length; i++) {
+      if (submissions[i].SubmissionVerdict.indexOf('Accepted') >= 0) {
+        submissions[i].truth = true;
+      }
+      else {
+        submissions[i].truth = false;
+      }
+      submissions[i].challName = submissions[i].chal[0].ChallengeName;
+      submissions[i].time = mongoose.Types.ObjectId(submissions[i]._id).getTimestamp();
+    }
     res.render('submissions.hbs', {
-      msg : "You have no submissions"
+      submission : submissions
     });
-  }
-});
-}
+  });
+ }
   else {
     sess.origin = 'submissions';
     res.redirect('/login')
@@ -508,9 +633,20 @@ app.get('/submissions', (req, res) => {
 });
 
 app.get('/scoreboard', (req, res) => {
-  res.send('TODO');
+  sess = req.session;
+  User.find().sort({ score: -1}).then((users) => {
+    for(var i = 0; i < users.length; i++) {
+      users[i].rank = i + 1 ;
+    }
+    res.render('scoreboard.hbs', {
+      rows : users,
+      logged : sess.logged
+    });
+
+  } );
+
 });
 
-app.listen(8082, () => {
-  console.log('[+] Listening on port 8082 ! ')
+app.listen(8090, () => {
+  console.log('[+] Listening on port 8090 ! ');
 });

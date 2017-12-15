@@ -5,35 +5,43 @@
 <head>
   {{> header2}}
 </head>
-<table border = "1" >
+
+
+<table class="table" >
+  <thead class="thead-inverse">
   <tr>
-    <td>
+    <th>
       Submission Date
-    </td>
-    <td>
+    </th>
+    <th>
       Challenge
-    </td>
-    <td>
+    </th>
+    <th>
       Language
-    </td>
-    <td>
+    </th>
+    <th>
       Verdict
-    </td>
+    </th>
   </tr>
+</thead>
   {{#submission}}
   <tr>
     <td>
-      {{submission_time}}
+      {{time}}
     </td>
     <td>
-      {{chall_name}}
+      {{challName}}
     </td>
     <td>
-      {{lang}}
+      {{SubmissionLang}}
     </td>
-    <td>
-      {{verdict}}
-    </td>
+    <th scope="row">
+      {{#if truth}}
+      <p class="text-success">{{SubmissionVerdict}}</p>
+      {{else}}
+      <p class="text-danger">{{SubmissionVerdict}}</p>
+      {{/if}}
+    </th>
   </tr>
   {{/submission}}
 </table>

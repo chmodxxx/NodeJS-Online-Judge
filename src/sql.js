@@ -5,7 +5,7 @@ function select(dbInfos = dbInfos, columns, table, additionnal = undefined , cal
     var con = db.Init(dbInfos,(err, con) => {
       if (err) console.log(err);
       else {
-          db.Select(con, columns, table, additionnal ,(err,row) => {
+          db.Select(con, columns, table, additionnal ,(err, row) => {
             if (err)
             {
               callback(0);
@@ -25,7 +25,7 @@ function insert(dbInfos = dbInfos, table, object, callback) {
     var con = db.Init(dbInfos,(err, con) => {
       if (err) console.log(err);
       else {
-        db.Insert(con, table, object ,(err,ok) => {
+        db.Insert(con, table, object ,(err, ok) => {
           if (err)
           {
             callback(err);
@@ -38,7 +38,26 @@ function insert(dbInfos = dbInfos, table, object, callback) {
       });
   }
 
+function update(dbInfos = dbInfos, table, updatestatement , additionnal, callback) {
+  var con = db.Init(dbInfos,(err, con) => {
+    if (err) console.log(err);
+    else {
+      db.Update(con, table, updatestatement, additionnal, (err, ok) => {
+        if (err)
+        {
+          callback(err);
+        }
+        else
+        {
+          callback(undefined, 1);
+        }})
+      }
+    });
+}
+
+
 module.exports = {
   select : select,
-  insert : insert
+  insert : insert,
+  update : update
 };

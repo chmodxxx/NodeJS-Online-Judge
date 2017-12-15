@@ -12,31 +12,33 @@
 </head>
 <body>
   <b>{{message}}</b>
-<table border = "1">
-<tr>
-  <td>
-    Challenge name
-  </td>
-  <td>
-    Challenge Points
-  </td>
-  <td>
-    Challenge Page
-  </td>
-</tr>
 
+<table class="table">
+  <thead class="thead-inverse">
+    <tr>
+      <th>
+        Challenge name
+      </th>
+      <th>
+        Challenge Points
+      </th>
+      <th>
+        Challenge Page
+      </th>
+    </tr>
+  </thead>
 {{#chall}}
-<tr>
-  <td>
-    {{chall_name}}
-  </td>
-  <td>
-    {{chall_points}}
-  </td>
-  <td>
-    <a href='/chall_page/{{chall_id}}'>Link</a>
-  </td>
-</tr>
+  <tr>
+    <td>
+      {{ChallengeName}}
+    </td>
+    <td>
+      {{ChallengePoints}}
+    </td>
+    <td>
+      <a href='/chall_page/{{_id}}'>Link</a>
+    </td>
+  </tr>
 {{/chall}}
 </table>
 </body>

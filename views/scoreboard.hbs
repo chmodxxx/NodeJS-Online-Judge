@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  {{#if logged}}
+  {{> header2}}
+  {{else}}
+  {{> header}}
+  {{/if}}
+</head>
+
+</body>
+<table class="table ">
+  <thead class="thead-inverse">
+  <tr>
+    <th>
+      Rank
+    </th>
+    <th>
+      Username
+    </th>
+    <th>
+      Score
+    </th>
+  </tr>
+  </thead>
+{{#rows}}
+<tr>
+  <th scope="row">
+    {{rank}}
+  </th>
+  <td>
+    {{username}}
+  </td>
+  <td>
+    {{score}}
+  </td>
+</tr>
+{{/rows}}
+</table>
+</html>
