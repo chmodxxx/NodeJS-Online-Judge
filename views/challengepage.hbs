@@ -1,0 +1,53 @@
+<html>
+<title>
+  Challenges page
+</title>
+
+<head>
+  {{> header2}}
+</head>
+
+<style>
+.output{
+	font-family: monospace;
+	white-space: pre-line;
+	border:1px solid #ccc;
+	background: #eee;
+	min-height: 50px;
+}
+</style>
+
+<script src="../static/javascript/jquery.min.js"></script>
+<script src="../static/javascript/ajax.js"></script>
+
+
+<body>
+  <div class="jumbotron jumbotron-fluid">
+    <div class="container">
+      {{#chall}}
+        <h1 class="display-3">Challenge name : {{ChallengeName}}</h1>
+        <h3 class="display-6">Challenge points : {{ChallengePoints}}<br>
+        Challenge description : {{ChallengeDescription}}<br>
+        Challenge Time limit : {{ChallengeTLE}}<br>
+        </h3>
+      {{/chall}}
+    </div>
+  </div>
+    <b>You can either upload source code file or past your code in the browser input</b><br><br>
+    <div class="form-group">
+      Input file : <input type="file" class="form-control-file" name="solution"><br>
+      Language : <select name="lang"  id="lang" class="form-control">
+        <option value="Python">Python</option>
+        <option value="C">C</option>
+        <option value="C++">C++</option>
+        <option value="Java">Java</option>
+        <option value="Javascript">Javascript</option>
+      </select><br><br>
+      Code :
+      <textarea   rows="30" cols="200" name="code"  id="code" onfocus="if(this.value==this.defaultValue)this.value='';" onblur="if(this.value=='')this.value=this.defaultValue;" >Paste your code here ....</textarea> <br><br>
+      <input type="submit" value="Submit Solution" onclick="compile()">
+    </div>
+    <p class="output" id = "verdict" ></p>
+  </body>
+
+</html>

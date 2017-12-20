@@ -18,13 +18,17 @@ var User = mongoose.model('User', {
     default: false,
   },
   score: {
-    type : Number,
+    type: Number,
     default : 0,
   },
   chalsolved: {
     type: Array,
     default: []
   },
+  preferredlangs : {
+    type: Object,
+    default: {}
+  }
 
 });
 

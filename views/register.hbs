@@ -9,17 +9,27 @@
 <script src="../static/javascript/ajax.js"></script>
 
 <body>
-    <b> {{reason}} </b>
-    <form action = "/register" method = "POST">
-      <input type = "username" name = "username" id = "username" placeholder = "Username" oninput = "checkform()" >
+    <div class="alert alert-info">
+      {{msg}}
+    </div>
+    <form action="/register" method="POST">
+      <div class="form-group">
+        <input type = "username"  name = "username" id = "username" placeholder = "Username" oninput = "checkform()" >
+      </div>
       <div id = "usernameValid"> </div>
-      <input type = "email" name = "email" id = "email" placeholder = "Email"  oninput = "checkform()"><br>
+      <div class="form-group">
+        <input type = "email" name = "email" id = "email" placeholder = "Email"  oninput = "checkform()"><br>
+      </div>
       <div id = "emailValid"> </div>
-      <input type = "password" name = "password" id = "password" placeholder = "Password" oninput = "checkform()"><br>
+      <div class="form-group">
+        <input type = "password" name = "password" id = "password" placeholder = "Password" oninput = "checkform()"><br>
+      </div>
       <div id = "passwordValid"> </div>
-      <input type = "password" name = "passwordConfirmation" id = "passwordConfirmation" placeholder = "Retype Password" oninput = "checkform()" ></br>
+      <div class="form-group">
+        <input type = "password" name = "passwordConfirmation" id = "passwordConfirmation" placeholder = "Retype Password" oninput = "checkform()" ></br>
+      </div>
       <div id = "passwordsMatch"> </div>
-      <input type = "submit" value = "Register">
+        <input type = "submit" value = "Register" class=btn btn-primary>
     </form>
 </body>
 </html>

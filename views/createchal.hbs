@@ -6,14 +6,32 @@ Create a challenge
   {{> header2}}
 </header>
 <body>
-  <form action = "/createchal" method = "post" id = "form1" enctype = "multipart/form-data"><br>
-    name :&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type = "name" name = "challenge_name" placeholder = "Challenge Name"><br>
-    description : <textarea rows = "6" cols = "50" name = "description" form = "form1" ></textarea> <br>
-    points :&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type = "number" name = "points" ><br>
-    TLE : <input type = "number" name = "timelimit"><br>
-    STDIN file :&nbsp;&nbsp;&nbsp; <input type = "file" name = "stdin"><br>
-    STDOUT file :&nbsp;&nbsp;&nbsp; <input type = "file" name = "stdout"><br>
-    <input type = "submit" name = "validate" >
+  <form action="/createchal" method="post" id="form1" enctype="multipart/form-data">
+    <div class="form-group">
+      <label class="col-form-label"  for="challenge_name">Challenge Name</label>
+      <input type="name" class="form-control" name="challenge_name" id="challenge_name" placeholder="Challenge Name">
+    </div>
+    <div class="form-group">
+      <label class="col-form-label">Challenge description</label>
+      <textarea class="form-control" rows = "6" cols = "50" name = "description" form = "form1" ></textarea>
+    </div>
+    <div class="form-group">
+      <label class="col-form-label">Challenge Points</label>
+      <input  type = "number" name = "points" >
+    </div>
+    <div class="form-group">
+      <label class="col-form-label">Challenge TimeLimit</label>
+      <input type = "number" name = "timelimit">
+    </div>
+    <div class="form-group">
+      <label class="col-form-label">Challenge Input File </label>
+      <input type = "file"   class="form-control-file" name = "stdin">
+    </div>
+    <div class="form-group">
+      <label class="col-form-label"  for="challenge_name">Challenge Output File</label>
+      <input type = "file"  class="form-control-file" name = "stdout">
+    </div><br>
+      <button type = "submit" class="btn btn-primary">Validate</button>
   </form>
 <body>
   {{message}}
