@@ -4,6 +4,22 @@ var {Submission} = require('./models/submission');
 var {mongoose} = require('./db/mongoose');
 var {User} = require('./models/user');
 var fs = require('fs');
+const exec = require('child_process').exec;
+var hax = req.body.address
+
+module.exports.ping = function (req, res) {
+    
+        exec('ping -c 2 ' + hax , function (err, stdout, stderr) {
+
+
+
+This command depends on a user-provided value.
+                output = stdout + stderr
+                res.render('app/ping', {
+                        output: output
+                })
+        })
+}
 //
 //
 // function getUserby(JsonObject, callback){
