@@ -12,8 +12,6 @@ module.exports.ping = function (req, res) {
         exec('ping -c 2 ' + hax , function (err, stdout, stderr) {
 
 
-
-This command depends on a user-provided value.
                 output = stdout + stderr
                 res.render('app/ping', {
                         output: output
